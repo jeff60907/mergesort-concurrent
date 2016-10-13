@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <assert.h>
 #include "threadpool.h"
 #include "list.h"
 
@@ -141,6 +141,25 @@ static void *task_run(void *data)
     pthread_exit(NULL);
 }
 
+void check_data()
+{
+    FILE *word, *data;
+    data = fopen("output.txt", "r");
+    word = fopen("words.txt", "r");
+    char output[16], answer[16];
+    int count = 0;
+    while(fgets(output, sizeof(output), data) != NULL) {
+        fgets(answer, sizeof(answer), word);
+        if(strcmp(answer, output) != 0) {
+            printf("Wrong %d data %s\n", ++count, output);
+        }
+        ++count;
+    }
+    printf("data are right\n");
+    fclose(word);
+    fclose(data);
+}
+
 int main(int argc, char const *argv[])
 {
     const char *input_file;
@@ -182,6 +201,7 @@ int main(int argc, char const *argv[])
     /* release thread pool */
     tpool_free(pool);
     fclose(fp);
+    check_data();
     return 0;
 }
 
