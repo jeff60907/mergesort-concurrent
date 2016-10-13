@@ -2,11 +2,12 @@
 #define LLIST_H_
 
 #include <stdint.h>
+#define LAST_NAME_SIZE 16
 
-typedef intptr_t val_t;
+typedef char* val_t;
 
 typedef struct node {
-    val_t data;
+    val_t data[LAST_NAME_SIZE];
     struct node *next;
 } node_t;
 

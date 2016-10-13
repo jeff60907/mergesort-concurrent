@@ -5,7 +5,8 @@
 #include "threadpool.h"
 #include "list.h"
 
-#define USAGE "usage: ./sort [thread_count] [input_count]\n"
+//#define USAGE "usage: ./sort [thread_count] [input_count]\n"
+#define USAGE "usage: ./sort [thread_count] [file_name]\n"
 
 struct {
     pthread_mutex_t mutex;
@@ -23,9 +24,9 @@ llist_t *merge_list(llist_t *a, llist_t *b)
     llist_t *_list = list_new();
     node_t *current = NULL;
     while (a->size && b->size) {
+        int cmp = strcmp((char *)a->head->data, (char *)b->head->data);
         llist_t *small = (llist_t *)
-                         ((intptr_t) a * (a->head->data <= b->head->data) +
-                          (intptr_t) b * (a->head->data > b->head->data));
+                         ((intptr_t) a * (cmp <= 0) + (intptr_t) b * (cmp > 0));
         if (current) {
             current->next = small->head;
             current = current->next;
@@ -142,26 +143,27 @@ static void *task_run(void *data)
 
 int main(int argc, char const *argv[])
 {
+    const char *input_file;
+    char line[64];
+    FILE *fp;
+
     if (argc < 3) {
         printf(USAGE);
         return -1;
     }
     thread_count = atoi(argv[1]);
-    data_count = atoi(argv[2]);
+    input_file = argv[2];
+    fp = fopen(input_file, "r");
     max_cut = thread_count * (thread_count <= data_count) +
               data_count * (thread_count > data_count) - 1;
 
     /* Read data */
     the_list = list_new();
 
-    /* FIXME: remove all all occurrences of printf and scanf
-     * in favor of automated test flow.
-     */
-    printf("input unsorted data line-by-line\n");
-    for (int i = 0; i < data_count; ++i) {
-        long int data;
-        scanf("%ld", &data);
-        list_add(the_list, data);
+    /* FIXME: remove all all occurrences of printf and scanf*/
+    while(fgets(line, sizeof(line), fp)!= NULL) {
+        line[strlen(line)-1] = '\0';
+        list_add(the_list, line);
     }
 
     /* initialize tasks inside thread pool */
@@ -179,5 +181,9 @@ int main(int argc, char const *argv[])
 
     /* release thread pool */
     tpool_free(pool);
+    fclose(fp);
     return 0;
 }
+
+
+

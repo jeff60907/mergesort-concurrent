@@ -1,13 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 #include "list.h"
+#define output "output.txt"
 
 static node_t *node_new(val_t val, node_t *next)
 {
     /* allocate node */
     node_t *node = malloc(sizeof(node_t));
-    node->data = val;
+    //node->data = val;
+    strcpy((char *)node->data, val);
     node->next = next;
     return node;
 }
@@ -52,10 +54,10 @@ void list_print(llist_t *list)
 {
     node_t *cur = list->head;
     /* FIXME: we have to validate the sorted results in advance. */
-    printf("\nsorted results:\n");
+    FILE *fp = fopen(output, "w");
     while (cur) {
-        printf("[%ld] ", cur->data);
+        fprintf(fp,"%s\n", (char *)cur->data);
         cur = cur->next;
     }
-    printf("\n");
+    fclose(fp);
 }
