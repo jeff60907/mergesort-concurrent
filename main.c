@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "threadpool.h"
 #include "list.h"
+#include <time.h>
 
 //#define USAGE "usage: ./sort [thread_count] [input_count]\n"
 #define USAGE "usage: ./sort [thread_count] [file_name]\n"
@@ -155,9 +156,22 @@ void check_data()
         }
         ++count;
     }
-    printf("data are right\n");
+    //printf("data are right\n");
     fclose(word);
     fclose(data);
+}
+
+static double diff_in_second(struct timespec t1, struct timespec t2)
+{
+    struct timespec diff;
+    if (t2.tv_nsec-t1.tv_nsec < 0) {
+        diff.tv_sec  = t2.tv_sec - t1.tv_sec - 1;
+        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec + 1000000000;
+    } else {
+        diff.tv_sec  = t2.tv_sec - t1.tv_sec;
+        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec;
+    }
+    return (diff.tv_sec + diff.tv_nsec / 1000000000.0);
 }
 
 int main(int argc, char const *argv[])
@@ -165,6 +179,8 @@ int main(int argc, char const *argv[])
     const char *input_file;
     char line[64];
     FILE *fp;
+    struct timespec start, end;
+    double cpu_time;
 
     if (argc < 3) {
         printf(USAGE);
@@ -191,7 +207,7 @@ int main(int argc, char const *argv[])
     tmp_list = NULL;
     pool = (tpool_t *) malloc(sizeof(tpool_t));
     tpool_init(pool, thread_count, task_run);
-
+    clock_gettime(CLOCK_REALTIME, &start);
     /* launch the first task */
     task_t *_task = (task_t *) malloc(sizeof(task_t));
     _task->func = cut_func;
@@ -200,6 +216,9 @@ int main(int argc, char const *argv[])
 
     /* release thread pool */
     tpool_free(pool);
+    clock_gettime(CLOCK_REALTIME, &end);
+    cpu_time = diff_in_second(start, end);
+    printf("%d %.4lf\n", thread_count, cpu_time);
     fclose(fp);
     check_data();
     return 0;
