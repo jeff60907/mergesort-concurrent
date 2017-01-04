@@ -9,4 +9,4 @@ set output 'runtime.png'
 
 
 plot [:][:] 'time.txt' using 2:xtic(1) with histogram title ' ', \
-'' using ($0+0.08):($2+0.5):2 with labels title ' ', \
+'' using ($0+0.2):($2+0.008):2 with labels title ' ', \

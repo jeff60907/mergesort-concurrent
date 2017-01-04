@@ -128,7 +128,19 @@ static void *task_run(void *data)
 {
     (void) data;
     while (1) {
+        /* Lock must be taken to wait on conditional variable */
+        pthread_mutex_lock(&pool->queue->mutex);
+        /* Wait on condition variable, check for spurious wakeups.
+        When returning from pthread_cond_wait(), we own the lock. */
+        while(pool->queue->size == 0) {
+            pthread_cond_wait(&(pool->queue->cond), &(pool->queue->mutex));
+        }
+        if (pool->queue->size ==0) break;
+
+        /*Grab out task */
         task_t *_task = tqueue_pop(pool->queue);
+        /* Unlock*/
+        pthread_mutex_unlock(&(pool->queue->mutex));
         if (_task) {
             if (!_task->func) {
                 tqueue_push(pool->queue, _task);
@@ -192,10 +204,10 @@ int main(int argc, char const *argv[])
     max_cut = thread_count * (thread_count <= data_count) +
               data_count * (thread_count > data_count) - 1;
 
-    /* Read data */
+    /* Initialize the list*/
     the_list = list_new();
 
-    /* FIXME: remove all all occurrences of printf and scanf*/
+    /* Read data */
     while(fgets(line, sizeof(line), fp)!= NULL) {
         line[strlen(line)-1] = '\0';
         list_add(the_list, line);
