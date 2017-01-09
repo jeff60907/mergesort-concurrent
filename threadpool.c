@@ -56,11 +56,11 @@ int tqueue_push(tqueue_t *the_queue, task_t *task)
 
 int tqueue_free(tqueue_t *the_queue)
 {
-    task_t *cur = the_queue->head;
+    task_t *cur = the_queue->tail;
     while (cur) {
-        the_queue->head = the_queue->head->next;
+        the_queue->tail = the_queue->tail->next;
         free(cur);
-        cur = the_queue->head;
+        cur = the_queue->tail;
     }
     /* Destroy*/
     pthread_mutex_destroy(&(the_queue->mutex));
